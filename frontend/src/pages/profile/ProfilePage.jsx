@@ -13,7 +13,10 @@ import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 import toast from "react-hot-toast";
 
+
+
 const ProfilePage = () => {
+
 	const [coverImg, setCoverImg] = useState(null);
 	const [profileImg, setProfileImg] = useState(null);
 	const [feedType, setFeedType] = useState("posts");
