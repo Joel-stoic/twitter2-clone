@@ -7,9 +7,8 @@ import { MdOutlineMail } from "react-icons/md";
 import { FaUser } from "react-icons/fa";
 import { MdPassword } from "react-icons/md";
 import { MdDriveFileRenameOutline } from "react-icons/md";
-import { useMutation } from '@tanstack/react-query';
-import toast, { Toaster } from "react-hot-toast";
-
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const SignUpPage = () => {
 	const [formData, setFormData] = useState({
@@ -19,52 +18,57 @@ const SignUpPage = () => {
 		password: "",
 	});
 
-	const{mutate,isError,isPending,error}=useMutation({
-		mutationFn:async({email,username,fullName,password})=>{
+	const queryClient = useQueryClient();
+
+	const { mutate, isError, isPending, error } = useMutation({
+		mutationFn: async ({ email, username, fullName, password }) => {
 			try {
-				const res=await fetch("/api/auth/signup",{
-					method:"POST",
-					headers:{
-						"Content-Type":"application/json"
+				const res = await fetch("/api/auth/signup", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
 					},
-					body:JSON.stringify({email,username,fullName,password})
-				})
-				const data=await res.json()
-				if(!res.ok)throw new Error(data.error || "Failed to create account") 
-					console.log(data)
+					body: JSON.stringify({ email, username, fullName, password }),
+				});
+
+				const data = await res.json();
+				if (!res.ok) throw new Error(data.error || "Failed to create account");
+				console.log(data);
 				return data;
 			} catch (error) {
-				console.log(error);
+				console.error(error);
 				throw error;
 			}
-			},
-			onSuccess:()=>{
-				toast.success("Account created successfully!")
-		}
-	})
+		},
+		onSuccess: () => {
+			toast.success("Account created successfully");
+
+			{
+				/* Added this line below, after recording the video. I forgot to add this while recording, sorry, thx. */
+			}
+			queryClient.invalidateQueries({ queryKey: ["authUser"] });
+		},
+	});
 
 	const handleSubmit = (e) => {
-		e.preventDefault(); 
-		mutate(formData)
+		e.preventDefault(); // page won't reload
+		mutate(formData);
 	};
 
 	const handleInputChange = (e) => {
 		setFormData({ ...formData, [e.target.name]: e.target.value });
 	};
 
-	
-
 	return (
 		<div className='max-w-screen-xl mx-auto flex h-screen px-10'>
-			<Toaster/>
-			<div className='flex-1 hidden lg:flex items-center  justify-center '>
-				<XSvg className=' lg:w-2/3 fill-white' />
+			<div className='flex-1 hidden lg:flex items-center  justify-center'>
+				<XSvg className='lg:w-2/3 fill-white' />
 			</div>
-			<div className='flex-1 flex flex-col justify-center items-center '>
-			<form className='lg:w-2/3  mx-auto md:mx-20 flex gap-4 flex-col border-red-700' onSubmit={handleSubmit}>
+			<div className='flex-1 flex flex-col justify-center items-center'>
+				<form className='lg:w-2/3  mx-auto md:mx-20 flex gap-4 flex-col' onSubmit={handleSubmit}>
 					<XSvg className='w-24 lg:hidden fill-white' />
 					<h1 className='text-4xl font-extrabold text-white'>Join today.</h1>
-					<label className='input input-bordered rounded flex items-center gap-2 '>
+					<label className='input input-bordered rounded flex items-center gap-2'>
 						<MdOutlineMail />
 						<input
 							type='email'
@@ -111,7 +115,7 @@ const SignUpPage = () => {
 						/>
 					</label>
 					<button className='btn rounded-full btn-primary text-white'>
-						{isPending?"Loading":"Sign up"}
+						{isPending ? "Loading..." : "Sign up"}
 					</button>
 					{isError && <p className='text-red-500'>{error.message}</p>}
 				</form>
